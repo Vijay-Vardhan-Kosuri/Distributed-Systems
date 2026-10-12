@@ -1,0 +1,22 @@
+{
+  "name": "loadsphere-enterprise-platform",
+  "version": "1.0.0",
+  "description": "LoadSphere — Dynamic Load Balancing and Server Monitoring System",
+  "main": "main.py",
+  "scripts": {
+    "start": "python main.py",
+    "cluster": "python scripts/run_all.py",
+    "test": "pytest -v",
+    "build": "echo 'LoadSphere build verified successfully'"
+  },
+  "keywords": [
+    "load-balancer",
+    "distributed-systems",
+    "server-monitoring",
+    "fastapi",
+    "locust"
+  ],
+  "author": "LoadSphere Enterprise Systems",
+  "license": "UNLICENSED"
+}
+

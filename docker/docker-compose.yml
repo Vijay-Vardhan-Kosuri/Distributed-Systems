@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  server_a:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    environment:
+      - SERVER_ID=server_a
+      - SERVER_NAME=Server A (Primary Compute)
+      - SERVER_PORT=8001
+    ports:
+      - "8001:8001"
+    command: ["uvicorn", "backend.servers.server_instance:app", "--host", "0.0.0.0", "--port", "8001"]
+
+  server_b:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    environment:
+      - SERVER_ID=server_b
+      - SERVER_NAME=Server B (Secondary Compute)
+      - SERVER_PORT=8002
+    ports:
+      - "8002:8002"
+    command: ["uvicorn", "backend.servers.server_instance:app", "--host", "0.0.0.0", "--port", "8002"]
+
+  server_c:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    environment:
+      - SERVER_ID=server_c
+      - SERVER_NAME=Server C (Burst Compute)
+      - SERVER_PORT=8003
+    ports:
+      - "8003:8003"
+    command: ["uvicorn", "backend.servers.server_instance:app", "--host", "0.0.0.0", "--port", "8003"]
+
+  load_balancer:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.lb
+    environment:
+      - LOADSPHERE_HOST=0.0.0.0
+      - LOADSPHERE_PORT=8000
+      - SERVER_A_URL=http://server_a:8001
+      - SERVER_B_URL=http://server_b:8002
+      - SERVER_C_URL=http://server_c:8003
+      - HEALTH_CHECK_INTERVAL=5.0
+      - FAILURE_THRESHOLD=3
+      - RECOVERY_THRESHOLD=3
+    ports:
+      - "8000:8000"
+    depends_on:
+      - server_a
+      - server_b
+      - server_c
