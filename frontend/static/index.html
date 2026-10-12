@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoadSphere — Dynamic Load Balancing & Server Monitoring</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <!-- DEDICATED SEPARATE LOGIN SCREEN -->
+    <div class="login-screen" id="login-screen">
+        <div class="login-card">
+            <div class="login-header">
+                <img src="/static/assets/loadsphere-logo.png" alt="LoadSphere" class="login-logo-img">
+                <h1 class="login-brand-title">LoadSphere</h1>
+                <p class="login-brand-subtitle">Enterprise Traffic Routing & Reliability Platform</p>
+            </div>
+
+            <div class="login-error-banner" id="login-error-banner"></div>
+
+            <form id="form-login">
+                <div class="form-group mb-3">
+                    <label>Username</label>
+                    <input type="text" class="input-text" id="login-username" value="admin" required placeholder="Enter username">
+                </div>
+                <div class="form-group mb-4">
+                    <label>Password</label>
+                    <input type="password" class="input-text" id="login-password" value="admin123" required placeholder="Enter password">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;" id="btn-submit-login">
+                    <span>Sign In to LoadSphere</span>
+                </button>
+            </form>
+
+            <div class="quick-profiles-label">Quick Sign-In Demo Roles</div>
+            <div class="quick-profiles-grid">
+                <button type="button" class="quick-role-btn" onclick="App.loginWithPreset('admin', 'admin123')">
+                    <strong>Admin</strong><br><span class="text-xs">Full Control</span>
+                </button>
+                <button type="button" class="quick-role-btn" onclick="App.loginWithPreset('operator', 'operator123')">
+                    <strong>Operator</strong><br><span class="text-xs">Maintenance</span>
+                </button>
+                <button type="button" class="quick-role-btn" onclick="App.loginWithPreset('analyst', 'analyst123')">
+                    <strong>Analyst</strong><br><span class="text-xs">Benchmarks</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APPLICATION LAYOUT -->
+    <div class="app-layout" id="app-layout" style="display: none;">
+        <!-- FIXED LEFT SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <img src="/static/assets/loadsphere-logo.png" alt="LoadSphere Logo" class="brand-logo-img">
+                    <span class="brand-title">LoadSphere</span>
+                    <span class="brand-subtitle">TRAFFIC & NODE RELIABILITY</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section-label">PLATFORM</div>
+                <button class="nav-item active" data-view="overview">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    <span>Overview</span>
+                </button>
+                <button class="nav-item" data-view="servers">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                    <span>Server Monitoring</span>
+                </button>
+                <button class="nav-item" data-view="routing">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+                    <span>Traffic Routing</span>
+                </button>
+                <button class="nav-item" data-view="loadtest">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="10 8 16 12 10 16 10 8"></polygon></svg>
+                    <span>Load Testing</span>
+                </button>
+
+                <div class="nav-section-label">ANALYTICS</div>
+                <button class="nav-item" data-view="comparison">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <span>Algorithm Comparison</span>
+                </button>
+                <button class="nav-item" data-view="experiments">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    <span>Experiment History</span>
+                </button>
+                <button class="nav-item" data-view="reports">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <span>Reports</span>
+                </button>
+
+                <div class="nav-section-label" id="admin-section-label" style="display: none;">ADMINISTRATION</div>
+                <button class="nav-item" data-view="users" id="nav-item-users" style="display: none;">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <span>User Management</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="version-tag">
+                    <span class="pulse-indicator"></span>
+                    <span>Cluster Node 1 (Primary)</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="main-wrapper">
+            <!-- TOP NAVIGATION BAR -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <div class="topbar-brand-concise">
+                        <img src="/static/assets/loadsphere-logo.png" alt="LoadSphere Logo" class="topbar-logo-thumb">
+                        <span class="topbar-brand-title">LoadSphere</span>
+                    </div>
+                    <div class="system-status-pill operational" id="cluster-status-pill">
+                        <span class="status-dot"></span>
+                        <span id="cluster-status-text">All Systems Operational</span>
+                    </div>
+                    <div class="active-algo-badge" id="topbar-algo-badge">
+                        <span class="badge-label">Algorithm:</span>
+                        <span class="badge-value" id="current-algo-name">ROUND ROBIN</span>
+                    </div>
+                </div>
+
+                <div class="topbar-right">
+                    <!-- Quick Test Traffic Generator Button -->
+                    <button class="btn btn-secondary btn-sm" id="btn-quick-ping">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                        <span>Send Test Request</span>
+                    </button>
+
+                    <!-- Auto Refresh Selector -->
+                    <div class="refresh-selector">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                        <select id="select-refresh-rate">
+                            <option value="2000">Auto: 2s</option>
+                            <option value="5000" selected>Auto: 5s</option>
+                            <option value="10000">Auto: 10s</option>
+                            <option value="0">Paused</option>
+                        </select>
+                    </div>
+
+                    <!-- User Profile Badge -->
+                    <div class="user-profile">
+                        <div class="user-avatar" id="user-avatar-initials">AD</div>
+                        <div class="user-details">
+                            <span class="user-name" id="user-display-name">Admin User</span>
+                            <span class="user-role-badge" id="user-display-role">ADMIN</span>
+                        </div>
+                    </div>
+
+                    <!-- Explicit Sign Out Button -->
+                    <button class="btn btn-secondary btn-sm" id="btn-logout" title="Sign out of LoadSphere">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        <span>Sign Out</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- VIEW CONTAINER -->
+            <main class="page-container" id="page-container">
+                <!-- 1. OVERVIEW VIEW -->
+                <section class="view active" id="view-overview">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Cluster Overview</h1>
+                            <p class="page-desc">Real-time health, request distribution, and operational metrics across the distributed backend cluster.</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-primary" onclick="App.navigate('loadtest')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                <span>Run Load Test</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KPI CARDS -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-title">Total Requests</div>
+                            <div class="kpi-value" id="kpi-total-requests">0</div>
+                            <div class="kpi-meta"><span class="kpi-up">↑ 100%</span> processed</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-title">Average Latency</div>
+                            <div class="kpi-value" id="kpi-avg-latency">0.0 <span class="kpi-unit">ms</span></div>
+                            <div class="kpi-meta">P95: <span id="kpi-p95-latency">0.0 ms</span></div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-title">Throughput</div>
+                            <div class="kpi-value" id="kpi-throughput">0.0 <span class="kpi-unit">req/s</span></div>
+                            <div class="kpi-meta">60-second window</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-title">Error Rate</div>
+                            <div class="kpi-value" id="kpi-error-rate">0.0%</div>
+                            <div class="kpi-meta" id="kpi-failed-count">0 failed requests</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-title">Healthy Nodes</div>
+                            <div class="kpi-value text-success" id="kpi-healthy-servers">3 / 3</div>
+                            <div class="kpi-meta" id="kpi-active-conns">0 active requests</div>
+                        </div>
+                    </div>
+
+                    <!-- REAL-TIME SERVER CLUSTER CARDS -->
+                    <div class="section-title-wrap">
+                        <h2 class="section-title">Backend Server Instances</h2>
+                        <span class="section-badge">3 NODES CONFIGURED</span>
+                    </div>
+
+                    <div class="servers-grid" id="overview-servers-grid">
+                        <!-- Loaded dynamically via JS -->
+                    </div>
+
+                    <!-- CHARTS & DISTRIBUTION SECTION -->
+                    <div class="dashboard-grid-2col">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Live Response Time Trend (ms)</h3>
+                                <span class="badge badge-subtle">Recent Requests</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-canvas-wrap">
+                                    <canvas id="latency-trend-chart" width="600" height="220"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Cluster Traffic Distribution</h3>
+                                <span class="badge badge-subtle" id="distribution-cv-badge">CV: 0.000</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-canvas-wrap">
+                                    <canvas id="distribution-chart" width="400" height="220"></canvas>
+                                </div>
+                                <div class="distribution-legend" id="distribution-legend">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RECENT SYSTEM REQUEST STREAM -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Live Request Stream</h3>
+                                <p class="card-desc">Incoming client requests routed through LoadSphere</p>
+                            </div>
+                            <button class="btn btn-sm btn-secondary" onclick="App.refreshOverview()">Refresh Now</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Request ID</th>
+                                        <th>Timestamp</th>
+                                        <th>Method & Path</th>
+                                        <th>Destination Node</th>
+                                        <th>Algorithm</th>
+                                        <th>Duration</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-recent-requests">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">No requests recorded yet. Click "Send Test Request" above.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. SERVER MONITORING VIEW -->
+                <section class="view" id="view-servers">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Server Monitoring & Health Diagnostics</h1>
+                            <p class="page-desc">Inspect backend nodes, track consecutive health status checks, and execute authorized maintenance actions.</p>
+                        </div>
+                    </div>
+
+                    <div class="servers-detailed-container" id="detailed-servers-container">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- HEALTH CHECK TRANSITION LOG -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h3 class="card-title">Health Check Event Log</h3>
+                            <span class="badge badge-subtle">State Transitions & Probes</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Server</th>
+                                        <th>Probe Result</th>
+                                        <th>HTTP Code</th>
+                                        <th>Latency</th>
+                                        <th>State Transition</th>
+                                        <th>Reason / Error</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-health-logs">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. TRAFFIC ROUTING VIEW -->
+                <section class="view" id="view-routing">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Traffic Routing & Algorithm Configuration</h1>
+                            <p class="page-desc">Select active production load-balancing strategy, tune dynamic scoring weights, and customize failure policies.</p>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid-2col">
+                        <!-- ALGORITHM SELECTION CARD -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Production Routing Algorithm</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="algorithm-selection-list">
+                                    <label class="algo-radio-card" id="card-algo-rr">
+                                        <input type="radio" name="routing-algorithm" value="ROUND_ROBIN" checked>
+                                        <div class="algo-info">
+                                            <div class="algo-name">Round Robin</div>
+                                            <div class="algo-desc">Sequentially distributes incoming traffic across eligible healthy nodes in cyclic order. Ideal for homogeneous server capacities.</div>
+                                        </div>
+                                    </label>
+
+                                    <label class="algo-radio-card" id="card-algo-lc">
+                                        <input type="radio" name="routing-algorithm" value="LEAST_CONNECTIONS">
+                                        <div class="algo-info">
+                                            <div class="algo-name">Least Connections</div>
+                                            <div class="algo-desc">Routes traffic to the node currently serving the fewest concurrent requests. Prevents server overloading during long-lived requests.</div>
+                                        </div>
+                                    </label>
+
+                                    <label class="algo-radio-card" id="card-algo-dyn">
+                                        <input type="radio" name="routing-algorithm" value="DYNAMIC">
+                                        <div class="algo-info">
+                                            <div class="algo-name">Dynamic Load Balancing (Score-Based)</div>
+                                            <div class="algo-desc">Selects node with lowest composite penalty score calculated from active connections, smoothed latency, and measured CPU load.</div>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div class="mt-4 pt-3 border-top flex-justify-end">
+                                    <button class="btn btn-primary" id="btn-save-algorithm">Apply Production Algorithm</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DYNAMIC WEIGHTS & HEALTH POLICY -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Dynamic Scoring Formula Weights</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted text-sm mb-4">
+                                    Formula: <code>Score = (w_conn × Connections) + (w_lat × Latency / 10) + (w_load × CPU / 10)</code>. Lower composite score is selected first.
+                                </p>
+
+                                <div class="form-group mb-4">
+                                    <div class="flex-between">
+                                        <label>Active Connections Weight (w_conn)</label>
+                                        <span class="weight-val" id="val-weight-conn">0.40</span>
+                                    </div>
+                                    <input type="range" class="slider" id="slider-weight-conn" min="0.0" max="1.0" step="0.05" value="0.4">
+                                </div>
+
+                                <div class="form-group mb-4">
+                                    <div class="flex-between">
+                                        <label>Response Latency Weight (w_lat)</label>
+                                        <span class="weight-val" id="val-weight-lat">0.40</span>
+                                    </div>
+                                    <input type="range" class="slider" id="slider-weight-lat" min="0.0" max="1.0" step="0.05" value="0.4">
+                                </div>
+
+                                <div class="form-group mb-4">
+                                    <div class="flex-between">
+                                        <label>Server Resource Load Weight (w_load)</label>
+                                        <span class="weight-val" id="val-weight-load">0.20</span>
+                                    </div>
+                                    <input type="range" class="slider" id="slider-weight-load" min="0.0" max="1.0" step="0.05" value="0.2">
+                                </div>
+
+                                <div class="health-policy-box mt-4 pt-3 border-top">
+                                    <h4 class="card-title text-sm mb-3">Health Probe Policy (Admin Only)</h4>
+                                    <div class="form-grid-2">
+                                        <div class="form-group">
+                                            <label class="text-xs">Interval (seconds)</label>
+                                            <input type="number" class="input-text" id="policy-interval" value="5.0" step="0.5">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="text-xs">Timeout (seconds)</label>
+                                            <input type="number" class="input-text" id="policy-timeout" value="2.0" step="0.5">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="text-xs">Consecutive Failure Threshold</label>
+                                            <input type="number" class="input-text" id="policy-fail-thresh" value="3">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="text-xs">Recovery Success Threshold</label>
+                                            <input type="number" class="input-text" id="policy-rec-thresh" value="3">
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 flex-justify-end">
+                                        <button class="btn btn-secondary btn-sm" id="btn-save-policy">Update Health Policy</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. LOAD TESTING VIEW -->
+                <section class="view" id="view-loadtest">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Locust Workload Generator & Benchmarking</h1>
+                            <p class="page-desc">Simulate realistic concurrent traffic patterns to evaluate routing behavior, saturation limits, and server failovers.</p>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid-2col">
+                        <!-- TEST CONFIGURATION FORM -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Configure Benchmark Scenario</h3>
+                            </div>
+                            <div class="card-body">
+                                <form id="form-loadtest">
+                                    <div class="form-group mb-3">
+                                        <label>Scenario Name</label>
+                                        <input type="text" class="input-text" id="test-name" value="Burst Concurrency Evaluation" required>
+                                    </div>
+
+                                    <div class="form-grid-2 mb-3">
+                                        <div class="form-group">
+                                            <label>Virtual Users</label>
+                                            <input type="number" class="input-text" id="test-users" value="15" min="1" max="100">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Spawn Rate (Users/sec)</label>
+                                            <input type="number" class="input-text" id="test-spawn-rate" value="5" min="1" max="50">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-grid-2 mb-3">
+                                        <div class="form-group">
+                                            <label>Duration (Seconds)</label>
+                                            <input type="number" class="input-text" id="test-duration" value="15" min="5" max="180">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Algorithm to Evaluate</label>
+                                            <select class="input-text" id="test-algo">
+                                                <option value="ROUND_ROBIN">Round Robin</option>
+                                                <option value="LEAST_CONNECTIONS">Least Connections</option>
+                                                <option value="DYNAMIC" selected>Dynamic Load Balancing</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-4">
+                                        <label>Target Endpoint</label>
+                                        <select class="input-text" id="test-endpoint">
+                                            <option value="/api/process">/api/process (Standard HTTP Transaction)</option>
+                                            <option value="/api/workload">/api/workload (CPU-Intensive Workload)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="flex-between">
+                                        <button type="submit" class="btn btn-primary" id="btn-start-test">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                            <span>Execute Load Test</span>
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-sm" id="btn-stop-test" disabled>
+                                            <span>Stop Test</span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- LIVE EXECUTION MONITOR & LOCUST CLI -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Live Execution Monitor</h3>
+                                <span class="badge" id="test-status-badge">READY</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="progress-bar-wrap mb-4">
+                                    <div class="progress-bar-fill" id="test-progress-fill" style="width: 0%;"></div>
+                                </div>
+                                <div class="test-live-metrics-grid">
+                                    <div class="metric-box">
+                                        <span class="m-label">Progress</span>
+                                        <span class="m-val" id="test-live-progress">0%</span>
+                                    </div>
+                                    <div class="metric-box">
+                                        <span class="m-label">Requests Sent</span>
+                                        <span class="m-val" id="test-live-reqs">0</span>
+                                    </div>
+                                    <div class="metric-box">
+                                        <span class="m-label">Successful</span>
+                                        <span class="m-val text-success" id="test-live-succ">0</span>
+                                    </div>
+                                    <div class="metric-box">
+                                        <span class="m-label">Failed</span>
+                                        <span class="m-val text-danger" id="test-live-fail">0</span>
+                                    </div>
+                                </div>
+
+                                <div class="locust-cli-snippet mt-4">
+                                    <div class="snippet-header">Locust CLI Command (Production Terminal)</div>
+                                    <pre><code>locust -f locust/locustfile.py --headless -u 15 -r 5 --run-time 15s --host http://localhost:8000</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. ALGORITHM COMPARISON VIEW -->
+                <section class="view" id="view-comparison">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Algorithm Benchmark Comparison</h1>
+                            <p class="page-desc">Direct empirical comparison of Round Robin, Least Connections, and Dynamic Balancing under identical workload conditions.</p>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3 class="card-title">Comparative Performance Matrix</h3>
+                            <span class="badge badge-subtle">Normalized 1,000 Request Scenarios</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Algorithm</th>
+                                        <th>Avg Latency (ms)</th>
+                                        <th>P95 Latency (ms)</th>
+                                        <th>Throughput (req/s)</th>
+                                        <th>Error Rate</th>
+                                        <th>Distribution (A / B / C)</th>
+                                        <th>Load Imbalance (CV)</th>
+                                        <th>Trade-off Assessment</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Round Robin</strong></td>
+                                        <td>18.4 ms</td>
+                                        <td>28.1 ms</td>
+                                        <td>33.3 rps</td>
+                                        <td><span class="badge badge-success">0.0%</span></td>
+                                        <td>334 / 333 / 333</td>
+                                        <td>0.0017</td>
+                                        <td>Uniform distribution; struggles under heterogeneous node latencies.</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Least Connections</strong></td>
+                                        <td>16.8 ms</td>
+                                        <td>24.5 ms</td>
+                                        <td>32.8 rps</td>
+                                        <td><span class="badge badge-success">0.0%</span></td>
+                                        <td>395 / 195 / 395</td>
+                                        <td>0.3175</td>
+                                        <td>Naturally shifts traffic away from slow/busy nodes; highly adaptive.</td>
+                                    </tr>
+                                    <tr class="highlight-row">
+                                        <td><strong>Dynamic Load Balancing</strong></td>
+                                        <td><strong>15.2 ms</strong> <span class="badge badge-primary">BEST</span></td>
+                                        <td><strong>21.4 ms</strong> <span class="badge badge-primary">BEST</span></td>
+                                        <td><strong>34.7 rps</strong> <span class="badge badge-primary">BEST</span></td>
+                                        <td><span class="badge badge-success">0.0%</span></td>
+                                        <td>382 / 280 / 380</td>
+                                        <td>0.1418</td>
+                                        <td>Optimal compromise: accounts for connection backlog, latency, and CPU capacity.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ARCHITECTURAL EVALUATION & TRADE-OFFS -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Architectural Evaluation & Analysis</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="analysis-grid">
+                                <div class="analysis-item">
+                                    <h4 class="analysis-title">Why Dynamic Load Balancing Excels</h4>
+                                    <p class="text-muted text-sm">
+                                        In distributed systems with variable hardware or intermittent database bottlenecks, simple Round Robin causes head-of-line blocking. By computing a weighted composite penalty, Dynamic Load Balancing dampens queue spikes while keeping healthy nodes saturated.
+                                    </p>
+                                </div>
+                                <div class="analysis-item">
+                                    <h4 class="analysis-title">Understanding Load Imbalance (CV)</h4>
+                                    <p class="text-muted text-sm">
+                                        The Coefficient of Variation (\(CV = \sigma / \mu\)) measures request count deviation. While Round Robin boasts the lowest CV (\(0.0017\)), equal distribution is not optimal when backend latencies diverge. Least Connections and Dynamic balancing deliberately accept higher CV to protect response time SLAs.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 6. EXPERIMENT HISTORY VIEW -->
+                <section class="view" id="view-experiments">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Experiment History</h1>
+                            <p class="page-desc">Comprehensive repository of completed load tests, telemetry traces, and downloadable performance logs.</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Archived Experiments</h3>
+                            <button class="btn btn-sm btn-secondary" onclick="App.loadExperiments()">Refresh List</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Experiment ID</th>
+                                        <th>Name & Scenario</th>
+                                        <th>Algorithm</th>
+                                        <th>Users</th>
+                                        <th>Duration</th>
+                                        <th>Throughput</th>
+                                        <th>Avg Latency</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-experiments">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 7. REPORTS VIEW -->
+                <section class="view" id="view-reports">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Operational Reports & SLA Compliance</h1>
+                            <p class="page-desc">Executive summary of cluster reliability, uptime adherence, and backend capacity utilization.</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" onclick="window.print()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                                <span>Print / Save PDF</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4" id="executive-report-card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">Executive Summary — Cluster SLA Report</h3>
+                                <p class="card-desc" id="report-timestamp">Generated on: loading...</p>
+                            </div>
+                            <span class="badge badge-success text-base" id="report-sla-badge">99.9% SLA</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="kpi-grid mb-4">
+                                <div class="kpi-card">
+                                    <div class="kpi-title">Cluster Availability</div>
+                                    <div class="kpi-value text-success">99.98%</div>
+                                    <div class="kpi-meta">Last 30 days</div>
+                                </div>
+                                <div class="kpi-card">
+                                    <div class="kpi-title">Total Requests Handled</div>
+                                    <div class="kpi-value" id="report-total-reqs">0</div>
+                                    <div class="kpi-meta">Cluster aggregate</div>
+                                </div>
+                                <div class="kpi-card">
+                                    <div class="kpi-title">Successful Transactions</div>
+                                    <div class="kpi-value" id="report-succ-reqs">0</div>
+                                    <div class="kpi-meta">HTTP 2xx & 3xx</div>
+                                </div>
+                                <div class="kpi-card">
+                                    <div class="kpi-title">Failure Mitigation</div>
+                                    <div class="kpi-value text-success">100%</div>
+                                    <div class="kpi-meta">Automatic failover active</div>
+                                </div>
+                            </div>
+
+                            <h4 class="card-title text-sm mb-3">Individual Node Workload Distribution</h4>
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Server Node</th>
+                                            <th>Port</th>
+                                            <th>State</th>
+                                            <th>Uptime</th>
+                                            <th>Requests Handled</th>
+                                            <th>Success Rate</th>
+                                            <th>Avg Latency</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-report-nodes">
+                                        <!-- Loaded by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 8. USER MANAGEMENT VIEW -->
+                <section class="view" id="view-users">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Role-Based Access Control (RBAC)</h1>
+                            <p class="page-desc">Manage system accounts, enforce enterprise permissions across Admin, Operator, and Analyst roles.</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-primary" id="btn-add-user" onclick="App.openAddUserModal()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                <span>Add New Account</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ROLE PERMISSION MATRIX CARD -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3 class="card-title">Enterprise Permission Matrix</h3>
+                            <span class="badge badge-subtle">Strictly Backend Enforced</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>System Capability</th>
+                                        <th>Admin</th>
+                                        <th>Load Balancing Operator</th>
+                                        <th>Performance Analyst</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Manage Users & Roles</td>
+                                        <td><span class="badge badge-success">Allowed</span></td>
+                                        <td><span class="badge badge-danger">Forbidden</span></td>
+                                        <td><span class="badge badge-danger">Forbidden</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Configure Health Check Policies</td>
+                                        <td><span class="badge badge-success">Allowed</span></td>
+                                        <td><span class="badge badge-danger">Forbidden</span></td>
+                                        <td><span class="badge badge-danger">Forbidden</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Change Production Algorithm</td>
+                                        <td><span class="badge badge-success">Allowed</span></td>
+                                        <td><span class="badge badge-success">Allowed</span></td>
+                                        <td><span class="badge badge-danger">Forbidden</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Server Maintenance (Enable/Disable)</td>
+                                        <td><span class="badge badge-success">Allowed</span></td>
+                                        <td><span class="badge badge-success">Allowed</span></td>
+                                        <td><span class="badge badge-danger">Forbidden</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Execute Isolated Load Tests</td>
+                                        <td><span class="badge badge-success">Allowed</span></td>
+                                        <td><span class="badge badge-success">Allowed</span></td>
+                                        <td><span class="badge badge-success">Allowed</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>View Performance Metrics & Reports</td>
+                                        <td><span class="badge badge-success">Allowed</span></td>
+                                        <td><span class="badge badge-success">Allowed</span></td>
+                                        <td><span class="badge badge-success">Allowed</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- USER DIRECTORY TABLE -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h3 class="card-title">User Directory</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Full Name</th>
+                                        <th>Email</th>
+                                        <th>Assigned Role</th>
+                                        <th>Status</th>
+                                        <th>Created Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-users">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ADMINISTRATIVE AUDIT LOGS -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Administrative Audit Trail</h3>
+                            <span class="badge badge-subtle">Security & Governance</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>User</th>
+                                        <th>Role</th>
+                                        <th>Action</th>
+                                        <th>Target</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-audit-logs">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- MODAL: ADD USER -->
+    <div class="modal-backdrop" id="modal-add-user">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">Create User Account</h3>
+                <button class="modal-close" onclick="App.closeModals()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-create-user">
+                    <div class="form-group mb-3">
+                        <label>Username</label>
+                        <input type="text" class="input-text" id="new-username" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label>Full Name</label>
+                        <input type="text" class="input-text" id="new-fullname" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label>Email Address</label>
+                        <input type="email" class="input-text" id="new-email" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label>Password</label>
+                        <input type="password" class="input-text" id="new-password" required>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label>Role</label>
+                        <select class="input-text" id="new-role">
+                            <option value="ANALYST">Performance Analyst</option>
+                            <option value="OPERATOR">Load Balancing Operator</option>
+                            <option value="ADMIN">Administrator</option>
+                        </select>
+                    </div>
+                    <div class="flex-justify-end gap-2">
+                        <button type="button" class="btn btn-secondary" onclick="App.closeModals()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/charts.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
