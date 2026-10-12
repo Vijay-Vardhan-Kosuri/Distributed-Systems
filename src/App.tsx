@@ -367,7 +367,7 @@ export const App: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-slate-900 bg-slate-950/60 py-4 text-center text-xs text-slate-500">
-        LoadSphere Distributed Observability • Role: Dashboard & Performance Engineer • GitHub: New-domain
+        LoadSphere Distributed Observability • Role: Dashboard & Performance Engineer • GitHub: Distributed-Systems
       </footer>
     </div>
   );
