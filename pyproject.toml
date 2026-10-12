@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "loadsphere-lb-engine"
+version = "1.0.0"
+description = "LoadSphere Load Balancing Engine — traffic distribution, health monitoring, and failover"
+authors = ["Load Balancing Engineer <lb-engineer@loadsphere.enterprise>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = ">=0.110.0"
+uvicorn = {extras = ["standard"], version = ">=0.27.0"}
+httpx = ">=0.27.0"
+pydantic = ">=2.6.0"
+pydantic-settings = ">=2.2.0"
+python-multipart = ">=0.0.9"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8.0.0"
+pytest-asyncio = ">=0.23.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
