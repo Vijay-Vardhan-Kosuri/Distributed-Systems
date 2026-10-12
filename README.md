@@ -1,8 +1,5 @@
 # LoadSphere — Dashboard & Performance Engineering Module
 
-**Contributor Role:** Dashboard & Performance Engineer  
-**Repository:** [https://github.com/Vijay-Vardhan-Kosuri/Distributed-Systems](https://github.com/Vijay-Vardhan-Kosuri/Distributed-Systems)  
-**Branch:** `feat/loadsphere-performance-dashboard`  
 
 ---
 
