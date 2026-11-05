@@ -32,7 +32,7 @@ def run(cmd, check=True):
 
 
 def git(*args):
-    return run("git " + " ".join(args))
+    return subprocess.run(["git", *args], text=True, capture_output=True)
 
 
 def main():
