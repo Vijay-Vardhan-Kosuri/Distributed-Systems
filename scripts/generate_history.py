@@ -5,8 +5,8 @@ import sys
 from pathlib import Path
 
 REPO = "Vijay-Vardhan-Kosuri/Distributed-Systems"
-START = 22
-END = 130
+START = 67
+END = 116
 
 PHASES = [
     ("request orchestration", "refine request scheduling, queue depth monitoring, and retry policy tuning across edge and core services."),
@@ -24,11 +24,30 @@ PHASES = [
 ]
 
 
+import time
+
+
 def run(cmd, check=True):
     result = subprocess.run(cmd, shell=True, text=True, capture_output=True)
     if check and result.returncode != 0:
         raise RuntimeError(f"Command failed: {cmd}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}")
     return result
+
+
+def run_retry(cmd, retries=5, sleep_seconds=5, check=True):
+    for attempt in range(retries):
+        result = subprocess.run(cmd, shell=True, text=True, capture_output=True)
+        if result.returncode == 0:
+            return result
+        combined = (result.stdout or "") + (result.stderr or "")
+        if "dial tcp" in combined or "connectex" in combined or "timed out" in combined or "temporarily unavailable" in combined:
+            if attempt < retries - 1:
+                time.sleep(sleep_seconds)
+                continue
+        if check:
+            raise RuntimeError(f"Command failed: {cmd}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}")
+        return result
+    raise RuntimeError(f"Command failed after retries: {cmd}")
 
 
 def git(*args):
@@ -89,10 +108,12 @@ def main():
             print(pr_result.stderr)
             existing = run(f'gh pr list --repo {REPO} --head {branch} --json url --limit 1', check=False)
             if existing.returncode != 0 or not existing.stdout.strip():
-                raise RuntimeError(f"PR creation failed for {branch}")
+                pr_result = run_retry(gh_cmd, retries=5, sleep_seconds=5, check=False)
+                if pr_result.returncode != 0:
+                    raise RuntimeError(f"PR creation failed for {branch}")
 
         merge_cmd = f'gh pr merge --repo {REPO} {branch} --merge --delete-branch --admin'
-        merge_result = run(merge_cmd, check=False)
+        merge_result = run_retry(merge_cmd, retries=5, sleep_seconds=5, check=False)
         if merge_result.returncode != 0:
             print(merge_result.stdout)
             print(merge_result.stderr)
